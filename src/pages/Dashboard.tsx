@@ -38,7 +38,7 @@ const Dashboard = () => {
     }
   ];
 
-  const currentPlan: PlanType = "free"; // Explicitly type as PlanType
+  const currentPlan: PlanType = "free"; // Properly typed to allow comparison
 
   return (
     <div className="min-h-screen bg-gray-50">
