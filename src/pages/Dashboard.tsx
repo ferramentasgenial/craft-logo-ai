@@ -1,3 +1,4 @@
+
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +38,7 @@ const Dashboard = () => {
     }
   ];
 
-  const currentPlan: PlanType = "free"; // This would come from user data
+  const currentPlan: PlanType = "free"; // Explicitly type as PlanType
 
   return (
     <div className="min-h-screen bg-gray-50">
