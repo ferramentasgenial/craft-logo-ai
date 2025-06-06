@@ -27,7 +27,7 @@ const Dashboard = () => {
     }
   ];
 
-  const currentPlan = "free"; // This would come from user data
+  const currentPlan: "free" | "premium" = "free"; // This would come from user data
 
   return (
     <div className="min-h-screen bg-gray-50">
