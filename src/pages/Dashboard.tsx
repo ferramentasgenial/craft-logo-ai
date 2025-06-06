@@ -1,3 +1,4 @@
+
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +8,24 @@ import { Link } from "react-router-dom";
 
 type PlanType = "free" | "premium";
 
+interface UserLogo {
+  id: number;
+  brandName: string;
+  createdAt: string;
+  status: string;
+  plan: PlanType;
+  thumbnail: string;
+}
+
 const Dashboard = () => {
   // Mock data - in real app this would come from API/database
-  const userLogos = [
+  const userLogos: UserLogo[] = [
     {
       id: 1,
       brandName: "TechStart",
       createdAt: "2024-01-15",
       status: "completed",
-      plan: "premium" as PlanType,
+      plan: "premium",
       thumbnail: "/placeholder.svg"
     },
     {
@@ -23,7 +33,7 @@ const Dashboard = () => {
       brandName: "GreenLeaf Café",
       createdAt: "2024-01-10", 
       status: "completed",
-      plan: "free" as PlanType,
+      plan: "free",
       thumbnail: "/placeholder.svg"
     }
   ];
