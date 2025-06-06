@@ -6,14 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Plus, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 
-type PlanType = "free" | "premium";
-
 interface UserLogo {
   id: number;
   brandName: string;
   createdAt: string;
   status: string;
-  plan: PlanType;
   thumbnail: string;
 }
 
@@ -25,7 +22,6 @@ const Dashboard = () => {
       brandName: "TechStart",
       createdAt: "2024-01-15",
       status: "completed",
-      plan: "premium",
       thumbnail: "/placeholder.svg"
     },
     {
@@ -33,12 +29,9 @@ const Dashboard = () => {
       brandName: "GreenLeaf Café",
       createdAt: "2024-01-10", 
       status: "completed",
-      plan: "free",
       thumbnail: "/placeholder.svg"
     }
   ];
-
-  const currentPlan: PlanType = "free"; // Properly typed to allow comparison
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -66,8 +59,8 @@ const Dashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Plano Atual</span>
-                <Badge variant={currentPlan === "premium" ? "default" : "secondary"}>
-                  {currentPlan === "premium" ? "Premium" : "Gratuito"}
+                <Badge variant="secondary">
+                  Gratuito
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -75,25 +68,12 @@ const Dashboard = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-gray-600">
-                    {currentPlan === "premium" 
-                      ? "Você tem acesso completo a todos os recursos"
-                      : "Você pode criar 1 logo simples gratuitamente"
-                    }
+                    Você pode criar logos profissionais gratuitamente
                   </p>
-                  {currentPlan === "free" && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Upgrade para Premium para desbloquear variações e downloads em SVG
-                    </p>
-                  )}
+                  <p className="text-sm text-gray-500 mt-1">
+                    Acesso completo a todas as funcionalidades da plataforma
+                  </p>
                 </div>
-                
-                {currentPlan === "free" && (
-                  <Link to="/pricing">
-                    <Button variant="outline">
-                      Fazer Upgrade
-                    </Button>
-                  </Link>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -138,8 +118,8 @@ const Dashboard = () => {
                         <span className="text-sm text-gray-500">
                           {new Date(logo.createdAt).toLocaleDateString('pt-BR')}
                         </span>
-                        <Badge variant={logo.plan === "premium" ? "default" : "secondary"}>
-                          {logo.plan === "premium" ? "Premium" : "Gratuito"}
+                        <Badge variant="secondary">
+                          Gratuito
                         </Badge>
                       </div>
                     </CardHeader>
