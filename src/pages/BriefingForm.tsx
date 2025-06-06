@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import { Link } from "react-router-dom";
 
 const BriefingForm = () => {
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     brandName: "",
     slogan: "",
@@ -66,7 +66,7 @@ const BriefingForm = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.brandName.trim()) {
@@ -78,12 +78,56 @@ const BriefingForm = () => {
       return;
     }
 
+    setIsLoading(true);
     console.log("Enviando dados do briefing:", formData);
-    
-    toast({
-      title: "Briefing enviado!",
-      description: "Estamos gerando seu logo. Isso pode levar alguns minutos.",
-    });
+
+    try {
+      const response = await fetch("https://testen8n1.app.n8n.cloud/webhook-test/teste-logo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          brandName: formData.brandName,
+          slogan: formData.slogan,
+          industry: formData.industry,
+          colors: formData.colors,
+          style: formData.style,
+          symbols: formData.symbols,
+          notes: formData.notes,
+          timestamp: new Date().toISOString()
+        }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Briefing enviado!",
+          description: "Estamos gerando seu logo. Isso pode levar alguns minutos.",
+        });
+        
+        // Reset form after successful submission
+        setFormData({
+          brandName: "",
+          slogan: "",
+          industry: "",
+          colors: [],
+          style: "",
+          symbols: "",
+          notes: ""
+        });
+      } else {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Erro ao enviar dados:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar os dados. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -228,9 +272,13 @@ const BriefingForm = () => {
                   />
                 </div>
 
-                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-3">
+                <Button 
+                  type="submit" 
+                  className="w-full bg-primary hover:bg-primary/90 text-lg py-3"
+                  disabled={isLoading}
+                >
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Gerar Meu Logo
+                  {isLoading ? "Enviando..." : "Gerar Meu Logo"}
                 </Button>
               </form>
             </CardContent>
