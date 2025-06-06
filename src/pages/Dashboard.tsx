@@ -1,10 +1,11 @@
-
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Download, Plus, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+
+type PlanType = "free" | "premium";
 
 const Dashboard = () => {
   // Mock data - in real app this would come from API/database
@@ -14,7 +15,7 @@ const Dashboard = () => {
       brandName: "TechStart",
       createdAt: "2024-01-15",
       status: "completed",
-      plan: "premium",
+      plan: "premium" as PlanType,
       thumbnail: "/placeholder.svg"
     },
     {
@@ -22,12 +23,12 @@ const Dashboard = () => {
       brandName: "GreenLeaf Café",
       createdAt: "2024-01-10", 
       status: "completed",
-      plan: "free",
+      plan: "free" as PlanType,
       thumbnail: "/placeholder.svg"
     }
   ];
 
-  const currentPlan: "free" | "premium" = "free"; // This would come from user data
+  const currentPlan: PlanType = "free"; // This would come from user data
 
   return (
     <div className="min-h-screen bg-gray-50">
