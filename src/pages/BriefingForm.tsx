@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,67 +80,77 @@ const BriefingForm = () => {
     }
 
     setIsLoading(true);
-    console.log("Enviando dados do briefing:", formData);
+    console.log("🚀 Iniciando envio dos dados:", formData);
+
+    const payload = {
+      brandName: formData.brandName,
+      slogan: formData.slogan,
+      industry: formData.industry,
+      colors: formData.colors,
+      style: formData.style,
+      symbols: formData.symbols,
+      notes: formData.notes,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log("📦 Payload sendo enviado:", payload);
 
     try {
+      console.log("🔗 Fazendo requisição para:", "https://testen8n1.app.n8n.cloud/webhook-test/teste-logo");
+      
       const response = await fetch("https://testen8n1.app.n8n.cloud/webhook-test/teste-logo", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "image/png, application/json",
         },
-        body: JSON.stringify({
-          brandName: formData.brandName,
-          slogan: formData.slogan,
-          industry: formData.industry,
-          colors: formData.colors,
-          style: formData.style,
-          symbols: formData.symbols,
-          notes: formData.notes,
-          timestamp: new Date().toISOString()
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (response.ok) {
-        // Check if response is an image
-        const contentType = response.headers.get("content-type");
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        console.error("❌ Response não OK:", response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const contentType = response.headers.get("content-type");
+      console.log("📄 Content-Type recebido:", contentType);
+
+      if (contentType && contentType.startsWith("image/")) {
+        console.log("🖼️ Resposta é uma imagem!");
+        const imageBlob = await response.blob();
+        console.log("📊 Tamanho da imagem:", imageBlob.size, "bytes");
         
-        if (contentType && contentType.startsWith("image/")) {
-          // Handle binary image response
-          const imageBlob = await response.blob();
-          const imageUrl = URL.createObjectURL(imageBlob);
-          
-          // Save logo data to localStorage for now (in a real app, this would go to a database)
-          const logoData = {
-            id: Date.now(),
-            brandName: formData.brandName,
-            createdAt: new Date().toISOString(),
-            status: "completed",
-            imageUrl: imageUrl,
-            briefingData: formData
-          };
-          
-          const existingLogos = JSON.parse(localStorage.getItem('userLogos') || '[]');
-          existingLogos.push(logoData);
-          localStorage.setItem('userLogos', JSON.stringify(existingLogos));
-          
-          toast({
-            title: "Logo criado com sucesso!",
-            description: "Seu logo foi gerado. Redirecionando para visualização...",
-          });
-          
-          // Redirect to dashboard after a short delay
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 2000);
-        } else {
-          // Handle JSON response (workflow started message)
-          toast({
-            title: "Briefing enviado!",
-            description: "Estamos gerando seu logo. Isso pode levar alguns minutos.",
-          });
+        if (imageBlob.size === 0) {
+          throw new Error("Imagem recebida está vazia");
         }
+
+        const imageUrl = URL.createObjectURL(imageBlob);
+        console.log("🔗 URL da imagem criada:", imageUrl);
         
-        // Reset form after successful submission
+        const logoData = {
+          id: Date.now(),
+          brandName: formData.brandName,
+          createdAt: new Date().toISOString(),
+          status: "completed",
+          imageUrl: imageUrl,
+          briefingData: formData,
+          fileSize: imageBlob.size,
+          contentType: contentType
+        };
+        
+        const existingLogos = JSON.parse(localStorage.getItem('userLogos') || '[]');
+        existingLogos.push(logoData);
+        localStorage.setItem('userLogos', JSON.stringify(existingLogos));
+        console.log("💾 Logo salvo no localStorage:", logoData);
+        
+        toast({
+          title: "Logo criado com sucesso!",
+          description: "Seu logo foi gerado. Redirecionando para visualização...",
+        });
+        
         setFormData({
           brandName: "",
           slogan: "",
@@ -151,14 +160,40 @@ const BriefingForm = () => {
           symbols: "",
           notes: ""
         });
+        
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+        
+      } else if (contentType && contentType.includes("application/json")) {
+        console.log("📄 Resposta é JSON");
+        const jsonData = await response.json();
+        console.log("📄 Dados JSON:", jsonData);
+        
+        toast({
+          title: "Briefing enviado!",
+          description: "Estamos gerando seu logo. Isso pode levar alguns minutos.",
+        });
+        
       } else {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.log("❓ Tipo de resposta não esperado");
+        const textResponse = await response.text();
+        console.log("📄 Resposta como texto:", textResponse);
+        
+        toast({
+          title: "Resposta inesperada",
+          description: `Tipo: ${contentType}. Verifique o console para mais detalhes.`,
+          variant: "destructive"
+        });
       }
+      
     } catch (error) {
-      console.error("Erro ao enviar dados:", error);
+      console.error("💥 Erro completo:", error);
+      console.error("💥 Stack trace:", error.stack);
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível enviar os dados. Tente novamente.",
+        title: "Erro na requisição",
+        description: `Erro: ${error.message}. Verifique o console para mais detalhes.`,
         variant: "destructive"
       });
     } finally {
