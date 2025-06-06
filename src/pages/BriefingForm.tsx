@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const BriefingForm = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     brandName: "",
@@ -100,10 +102,44 @@ const BriefingForm = () => {
       });
 
       if (response.ok) {
-        toast({
-          title: "Briefing enviado!",
-          description: "Estamos gerando seu logo. Isso pode levar alguns minutos.",
-        });
+        // Check if response is an image
+        const contentType = response.headers.get("content-type");
+        
+        if (contentType && contentType.startsWith("image/")) {
+          // Handle binary image response
+          const imageBlob = await response.blob();
+          const imageUrl = URL.createObjectURL(imageBlob);
+          
+          // Save logo data to localStorage for now (in a real app, this would go to a database)
+          const logoData = {
+            id: Date.now(),
+            brandName: formData.brandName,
+            createdAt: new Date().toISOString(),
+            status: "completed",
+            imageUrl: imageUrl,
+            briefingData: formData
+          };
+          
+          const existingLogos = JSON.parse(localStorage.getItem('userLogos') || '[]');
+          existingLogos.push(logoData);
+          localStorage.setItem('userLogos', JSON.stringify(existingLogos));
+          
+          toast({
+            title: "Logo criado com sucesso!",
+            description: "Seu logo foi gerado. Redirecionando para visualização...",
+          });
+          
+          // Redirect to dashboard after a short delay
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 2000);
+        } else {
+          // Handle JSON response (workflow started message)
+          toast({
+            title: "Briefing enviado!",
+            description: "Estamos gerando seu logo. Isso pode levar alguns minutos.",
+          });
+        }
         
         // Reset form after successful submission
         setFormData({

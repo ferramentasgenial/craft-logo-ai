@@ -1,37 +1,69 @@
 
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, Plus, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Download, Plus, Eye, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserLogo {
   id: number;
   brandName: string;
   createdAt: string;
   status: string;
-  thumbnail: string;
+  imageUrl: string;
+  briefingData?: any;
 }
 
 const Dashboard = () => {
-  // Mock data - in real app this would come from API/database
-  const userLogos: UserLogo[] = [
-    {
-      id: 1,
-      brandName: "TechStart",
-      createdAt: "2024-01-15",
-      status: "completed",
-      thumbnail: "/placeholder.svg"
-    },
-    {
-      id: 2,
-      brandName: "GreenLeaf Café",
-      createdAt: "2024-01-10", 
-      status: "completed",
-      thumbnail: "/placeholder.svg"
-    }
-  ];
+  const { toast } = useToast();
+  const [userLogos, setUserLogos] = useState<UserLogo[]>([]);
+  const [selectedLogo, setSelectedLogo] = useState<UserLogo | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // Load logos from localStorage
+    const savedLogos = JSON.parse(localStorage.getItem('userLogos') || '[]');
+    setUserLogos(savedLogos);
+  }, []);
+
+  const handleDownload = (logo: UserLogo) => {
+    // Create a temporary link to download the image
+    const link = document.createElement('a');
+    link.href = logo.imageUrl;
+    link.download = `${logo.brandName}-logo.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Download iniciado",
+      description: "Seu logo está sendo baixado.",
+    });
+  };
+
+  const handleRequestChanges = (logo: UserLogo) => {
+    toast({
+      title: "Solicitação enviada",
+      description: "Suas alterações foram solicitadas e serão processadas em breve.",
+    });
+    // In a real app, this would send the request to the backend
+  };
+
+  const handleDeleteLogo = (logoId: number) => {
+    const updatedLogos = userLogos.filter(logo => logo.id !== logoId);
+    setUserLogos(updatedLogos);
+    localStorage.setItem('userLogos', JSON.stringify(updatedLogos));
+    setIsDialogOpen(false);
+    
+    toast({
+      title: "Logo removido",
+      description: "O logo foi removido com sucesso.",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -106,9 +138,9 @@ const Dashboard = () => {
                 {userLogos.map((logo) => (
                   <Card key={logo.id} className="hover:shadow-lg transition-shadow duration-300">
                     <CardHeader className="pb-3">
-                      <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                      <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
                         <img 
-                          src={logo.thumbnail} 
+                          src={logo.imageUrl} 
                           alt={`Logo ${logo.brandName}`}
                           className="w-full h-full object-contain rounded-lg"
                         />
@@ -126,11 +158,84 @@ const Dashboard = () => {
                     
                     <CardContent className="pt-0">
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Eye className="h-4 w-4 mr-1" />
-                          Visualizar
-                        </Button>
-                        <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90">
+                        <Dialog open={isDialogOpen && selectedLogo?.id === logo.id} onOpenChange={setIsDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => setSelectedLogo(logo)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Visualizar
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center justify-between">
+                                <span>Logo: {selectedLogo?.brandName}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => selectedLogo && handleDeleteLogo(selectedLogo.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Remover
+                                </Button>
+                              </DialogTitle>
+                            </DialogHeader>
+                            
+                            {selectedLogo && (
+                              <div className="space-y-6">
+                                <div className="flex justify-center">
+                                  <img 
+                                    src={selectedLogo.imageUrl} 
+                                    alt={`Logo ${selectedLogo.brandName}`}
+                                    className="max-w-full max-h-96 object-contain"
+                                  />
+                                </div>
+                                
+                                <div className="flex gap-4 justify-center">
+                                  <Button 
+                                    onClick={() => handleDownload(selectedLogo)}
+                                    className="bg-primary hover:bg-primary/90"
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Baixar Logo
+                                  </Button>
+                                  
+                                  <Button 
+                                    variant="outline"
+                                    onClick={() => handleRequestChanges(selectedLogo)}
+                                  >
+                                    Solicitar Alterações
+                                  </Button>
+                                </div>
+                                
+                                {selectedLogo.briefingData && (
+                                  <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="font-medium mb-2">Dados do Briefing:</h4>
+                                    <div className="text-sm text-gray-600 space-y-1">
+                                      <p><strong>Área:</strong> {selectedLogo.briefingData.industry}</p>
+                                      <p><strong>Cores:</strong> {selectedLogo.briefingData.colors.join(', ')}</p>
+                                      <p><strong>Estilo:</strong> {selectedLogo.briefingData.style}</p>
+                                      {selectedLogo.briefingData.symbols && (
+                                        <p><strong>Símbolos:</strong> {selectedLogo.briefingData.symbols}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </DialogContent>
+                        </Dialog>
+                        
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-primary hover:bg-primary/90"
+                          onClick={() => handleDownload(logo)}
+                        >
                           <Download className="h-4 w-4 mr-1" />
                           Baixar
                         </Button>
